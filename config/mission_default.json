@@ -1,0 +1,24 @@
+{
+  "grid_size": [10, 10],
+  "start_pos": [0, 0],
+  "battery_capacity": 100,
+  "costs": {
+    "move": 2,
+    "scan": 5,
+    "recharge_rate": 25
+  },
+  "solar_stations": [[0, 0], [5, 5]],
+  "obstacles": [[2, 2], [2, 3], [2, 4], [6, 7], [7, 7]],
+  "initial_signal": {
+    "direction": "SE",
+    "strength": 0.4
+  },
+  "ground_truth": {
+    "eve_pos": [8, 9],
+    "clues": [
+      {"pos": [1, 2], "type": "radio_ping", "dist_to_eve": 9.89, "noise_sigma": 0.8},
+      {"pos": [4, 5], "type": "energy_residue", "dist_to_eve": 5.65, "noise_sigma": 0.5},
+      {"pos": [7, 8], "type": "direct_beacon", "dist_to_eve": 1.41, "noise_sigma": 0.2}
+    ]
+  }
+}

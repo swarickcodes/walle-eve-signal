@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WALL-E & EVE's Signal - Autonomous Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+    body { background-color: #0b0e14; font-family: 'Chakra Petch', sans-serif; color: #e2e8f0; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .grid-cell { position: relative; aspect-ratio: 1 / 1; transition: background-color 0.15s ease-out; }
+    
+    @keyframes sonar-wave { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
+    .sonar-active::after {
+      content: ''; position: absolute; inset: -20%; border: 2px solid #06b6d4;
+      border-radius: 50%; animation: sonar-wave 0.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+      pointer-events: none; z-index: 20;
+    }
+
+    @keyframes faint-echo { 0% { opacity: 0.3; transform: scale(0.7); } 100% { opacity: 0.9; transform: scale(1.1); } }
+    .faint-signal { animation: faint-echo 1.4s ease-out infinite alternate; }
+
+    @keyframes love-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    .love-docked { animation: love-bounce 1.5s ease-in-out infinite; }
+
+    #traceLog::-webkit-scrollbar { width: 6px; }
+    #traceLog::-webkit-scrollbar-track { background: #090d16; border-radius: 4px; }
+    #traceLog::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; border: 1px solid #334155; }
+    #traceLog::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+
+    .trace-item { height: 48px; flex-shrink: 0; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-6 select-none relative overflow-x-hidden">
+
+  <!-- TOP HEADER -->
+  <header class="flex flex-col md:flex-row items-start md:items-center justify-between pb-4 border-b border-slate-800 gap-4 mb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/40 flex items-center justify-center p-1 shadow-lg shadow-amber-500/10 shrink-0">
+        <svg viewBox="0 0 100 130" class="w-full h-full object-contain drop-shadow">
+          <g stroke="#262626" stroke-width="2">
+            <ellipse cx="32" cy="22" rx="20" ry="15" fill="#e2e8f0" transform="rotate(-10 32 22)" />
+            <ellipse cx="68" cy="22" rx="20" ry="15" fill="#e2e8f0" transform="rotate(10 68 22)" />
+            <circle cx="34" cy="23" r="8" fill="#1e293b" /><circle cx="66" cy="23" r="8" fill="#1e293b" />
+            <circle cx="34" cy="23" r="4.5" fill="#be123c" /><circle cx="66" cy="23" r="4.5" fill="#be123c" />
+            <circle cx="32" cy="21" r="1.5" fill="#ffffff" /><circle cx="64" cy="21" r="1.5" fill="#ffffff" />
+            <rect x="47" y="32" width="6" height="24" fill="#78350f" />
+          </g>
+          <rect x="22" y="52" width="56" height="50" rx="4" fill="#d97706" stroke="#78350f" stroke-width="3" />
+          <rect x="26" y="56" width="48" height="42" fill="#b45309" opacity="0.6" />
+          <rect x="30" y="60" width="40" height="18" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" rx="2" />
+          <rect x="52" y="64" width="12" height="6" fill="#15803d" />
+          <rect x="36" y="86" width="28" height="8" fill="#1e293b" rx="1" />
+          <text x="50" y="92.5" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="bold" fill="#f8fafc" text-anchor="middle">WALL·E</text>
+          <g stroke="#1e293b" stroke-width="2">
+            <path d="M 12 70 L 22 75 L 34 85 L 26 95" fill="#d97706" />
+            <path d="M 88 70 L 78 75 L 66 85 L 74 95" fill="#d97706" />
+            <rect x="34" y="68" width="14" height="16" fill="#94a3b8" rx="2" transform="rotate(15 41 76)" />
+            <rect x="52" y="68" width="14" height="16" fill="#94a3b8" rx="2" transform="rotate(-15 59 76)" />
+          </g>
+          <rect x="18" y="100" width="64" height="22" rx="4" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+          <line x1="26" y1="102" x2="26" y2="120" stroke="#475569" stroke-width="2" />
+          <line x1="36" y1="102" x2="36" y2="120" stroke="#475569" stroke-width="2" />
+          <line x1="46" y1="102" x2="46" y2="120" stroke="#475569" stroke-width="2" />
+          <line x1="56" y1="102" x2="56" y2="120" stroke="#475569" stroke-width="2" />
+          <line x1="66" y1="102" x2="66" y2="120" stroke="#475569" stroke-width="2" />
+          <line x1="74" y1="102" x2="74" y2="120" stroke="#475569" stroke-width="2" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wider text-amber-400 uppercase">WALL-E // EVE'S SIGNAL</h1>
+      </div>
+    </div>
+
+    <!-- TELEMETRY -->
+    <div class="flex flex-wrap items-center gap-3 text-xs font-mono">
+      <button onclick="toggleJsonEditor()" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/40 flex items-center gap-1.5 transition">
+        <i class="ph-bold ph-brackets-curly"></i>
+        <span>JSON EDITOR</span>
+      </button>
+
+      <div id="statusBadge" class="px-3 py-1.5 rounded bg-slate-800 text-amber-400 border border-amber-500/30 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span id="agentStateText">STATE: READY</span>
+      </div>
+
+      <div class="px-3 py-1.5 rounded bg-slate-800/80 border border-slate-700 flex items-center gap-2">
+        <i class="ph-bold ph-battery-charging text-emerald-400 text-sm"></i>
+        <span>BATTERY:</span>
+        <span id="batteryCounter" class="text-emerald-400 font-bold text-sm">--/--</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ERROR ALERT BANNER -->
+  <div id="impossibleAlert" class="hidden mb-4 p-4 rounded-lg bg-rose-950/90 border-2 border-rose-500 text-rose-200 flex items-start justify-between shadow-2xl">
+    <div class="flex items-start gap-3">
+      <i class="ph-fill ph-warning-octagon text-3xl text-rose-400 shrink-0 mt-0.5"></i>
+      <div>
+        <h3 class="font-bold text-base tracking-wide text-rose-300 uppercase">MISSION HALTED BY BACKEND</h3>
+        <p id="impossibleDetail" class="text-xs font-mono text-rose-300/90 mt-1 leading-relaxed"></p>
+      </div>
+    </div>
+    <button onclick="document.getElementById('impossibleAlert').classList.add('hidden')" class="text-rose-400 hover:text-rose-100 text-lg px-2"><i class="ph ph-x"></i></button>
+  </div>
+
+  <!-- MAIN DUAL-PANE VIEW -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch">
+    
+    <!-- LEFT: RADAR MAP -->
+    <div class="lg:col-span-7 flex flex-col bg-slate-900/60 rounded-xl border border-slate-800 p-4 shadow-xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="uppercase tracking-wider font-semibold text-slate-400">Terrain Radar</span>
+          <span id="gridDimensionsTag" class="font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">--x--</span>
+        </div>
+        <div id="targetLockIndicator" class="flex items-center gap-2 text-slate-500 font-mono text-[11px]">
+          <i class="ph-bold ph-crosshair text-sm"></i>
+          <span id="targetLockText">Target Unconfirmed</span>
+        </div>
+      </div>
+
+      <div class="flex-1 flex items-center justify-center min-h-[380px] p-2 bg-slate-950/70 rounded-lg border border-slate-900 relative overflow-hidden">
+        <div id="gridContainer" class="grid gap-1 max-w-full max-h-full transition-all"></div>
+      </div>
+
+      <div class="pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 mt-3 font-mono text-xs">
+        <div class="flex items-center gap-2">
+          <button id="btnPlayPause" onclick="togglePlay()" class="px-3 py-2 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold flex items-center gap-1.5 shadow transition">
+            <i id="playIcon" class="ph-bold ph-play"></i>
+            <span id="playText">RUN</span>
+          </button>
+          <button onclick="requestStep()" class="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+            <i class="ph-bold ph-step-forward"></i>
+            <span>STEP</span>
+          </button>
+          <button onclick="resetSimulation()" class="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+            <i class="ph-bold ph-arrow-counter-clockwise"></i>
+            <span>RESET</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 text-slate-400">
+          <span>SPEED:</span>
+          <select id="speedSelect" onchange="changeSpeed(this.value)" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+            <option value="600">0.5x</option>
+            <option value="300" selected>1.0x</option>
+            <option value="120">2.0x</option>
+            <option value="40">5.0x</option>
+          </select>
+        </div>
+
+        <div class="text-slate-400">
+          STEP: <span id="stepCounter" class="text-amber-400 font-bold">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PRESETS & DECISION LOGS -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+      
+      <!-- Preset Selectors -->
+      <div class="bg-slate-900/60 rounded-xl border border-slate-800 p-4 shadow-xl">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3 text-xs">
+          <span class="uppercase tracking-wider font-semibold text-slate-400">Scenarios & Upload</span>
+          <div class="flex items-center gap-3">
+            <button onclick="toggleJsonEditor()" class="font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1">
+              <i class="ph-bold ph-code"></i>
+              <span>Edit JSON</span>
+            </button>
+            <label class="cursor-pointer font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+              <i class="ph-bold ph-upload-simple"></i>
+              <span>Upload JSON</span>
+              <input type="file" id="jsonFileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)" />
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+          <button onclick="loadBackendPreset('default')" class="p-2.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-300">
+            <div class="font-bold text-amber-400">1. Standard Recon</div>
+            <div class="text-[10px] text-slate-400">10x10 Balanced</div>
+          </button>
+          <button onclick="loadBackendPreset('step10_deadlock')" class="p-2.5 rounded bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-left text-rose-200">
+            <div class="font-bold text-rose-400">2. Step Cost 10</div>
+            <div class="text-[10px] text-rose-300/80">Triggers loop failsafe</div>
+          </button>
+          <button onclick="loadBackendPreset('desert')" class="p-2.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-300">
+            <div class="font-bold text-amber-400">3. Canyon Maze</div>
+            <div class="text-[10px] text-slate-400">14x14 Obstacle landscape</div>
+          </button>
+          <button onclick="loadBackendPreset('walled_target')" class="p-2.5 rounded bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-left text-rose-200">
+            <div class="font-bold text-rose-400">4. Walled Target</div>
+            <div class="text-[10px] text-rose-300/80">EVE blocked by scrap</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Battery Watchdog -->
+      <div class="bg-slate-900/60 rounded-xl border border-slate-800 p-4 font-mono text-xs shadow">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-slate-400 uppercase">Power Capacity</span>
+          <span id="batteryStatusLabel" class="text-emerald-400 font-bold">NORMAL RESERVES</span>
+        </div>
+        <div class="w-full bg-slate-950 rounded-full h-3.5 border border-slate-800 overflow-hidden">
+          <div id="batteryProgressBar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Action Trace Stream -->
+      <div class="bg-slate-900/60 rounded-xl border border-slate-800 p-4 flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-2 shrink-0">
+          <div class="flex items-center gap-2 font-mono">
+            <i class="ph-bold ph-terminal-window text-amber-400"></i>
+            <span class="text-xs uppercase tracking-wider font-semibold text-slate-300 font-bold">BACKEND ACTION TRACE LOG</span>
+          </div>
+          <button onclick="openReportModal()" class="text-xs text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1">
+            <i class="ph-bold ph-file-text"></i> <span>Report</span>
+          </button>
+        </div>
+        <div id="traceLog" class="overflow-y-auto space-y-2 font-mono text-xs pr-1.5 h-[552px] max-h-[552px]"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- JSON EDITOR DRAWER -->
+  <div id="jsonEditorDrawer" class="fixed inset-y-0 right-0 w-full max-w-xl bg-slate-950/95 border-l border-slate-800 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 flex flex-col p-5 font-mono text-xs">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+      <span class="text-amber-400 font-bold text-sm">MISSION CONFIG JSON</span>
+      <button onclick="toggleJsonEditor()" class="text-slate-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
+    </div>
+    <textarea id="jsonEditorArea" spellcheck="false" class="flex-1 w-full p-3 rounded bg-slate-900 border border-slate-800 text-slate-200 font-mono text-xs focus:outline-none resize-none mb-3"></textarea>
+    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="toggleJsonEditor()" class="px-3 py-1.5 rounded bg-slate-800 text-slate-400">Cancel</button>
+      <button onclick="applyEditorJson()" class="px-4 py-1.5 rounded bg-amber-500 text-slate-950 font-bold">Apply & Post</button>
+    </div>
+  </div>
+
+  <!-- REPORT MODAL -->
+  <div id="reportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-2xl w-full p-6 font-mono text-xs flex flex-col max-h-[85vh] shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 text-amber-400 font-bold text-sm">
+        <span>FINAL MISSION REPORT</span>
+        <button onclick="document.getElementById('reportModal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="ph ph-x"></i></button>
+      </div>
+      <div id="reportModalBody" class="flex-1 overflow-y-auto py-4 whitespace-pre-wrap text-slate-300 bg-slate-950 p-4 rounded border border-slate-800 my-3 font-mono"></div>
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+        <button onclick="copyReportText()" class="px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Copy</button>
+        <button onclick="document.getElementById('reportModal').classList.add('hidden')" class="px-4 py-2 rounded bg-amber-500 text-slate-950 font-bold">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WALLE_SVG = `
+      <svg viewBox="0 0 100 130" class="w-full h-full drop-shadow-md">
+        <g stroke="#262626" stroke-width="2">
+          <ellipse cx="32" cy="22" rx="20" ry="15" fill="#e2e8f0" transform="rotate(-10 32 22)" />
+          <ellipse cx="68" cy="22" rx="20" ry="15" fill="#e2e8f0" transform="rotate(10 68 22)" />
+          <circle cx="34" cy="23" r="8" fill="#1e293b" /><circle cx="66" cy="23" r="8" fill="#1e293b" />
+          <circle cx="34" cy="23" r="4.5" fill="#be123c" /><circle cx="66" cy="23" r="4.5" fill="#be123c" />
+          <circle cx="32" cy="21" r="1.5" fill="#ffffff" /><circle cx="64" cy="21" r="1.5" fill="#ffffff" />
+          <rect x="47" y="32" width="6" height="24" fill="#78350f" />
+        </g>
+        <rect x="22" y="52" width="56" height="50" rx="4" fill="#d97706" stroke="#78350f" stroke-width="3" />
+        <rect x="26" y="56" width="48" height="42" fill="#b45309" opacity="0.6" />
+        <rect x="30" y="60" width="40" height="18" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" rx="2" />
+        <rect x="52" y="64" width="12" height="6" fill="#15803d" />
+        <rect x="36" y="86" width="28" height="8" fill="#1e293b" rx="1" />
+        <text x="50" y="92.5" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="bold" fill="#f8fafc" text-anchor="middle">WALL·E</text>
+        <g stroke="#1e293b" stroke-width="2">
+          <path d="M 12 70 L 22 75 L 34 85 L 26 95" fill="#d97706" />
+          <path d="M 88 70 L 78 75 L 66 85 L 74 95" fill="#d97706" />
+          <rect x="34" y="68" width="14" height="16" fill="#94a3b8" rx="2" transform="rotate(15 41 76)" />
+          <rect x="52" y="68" width="14" height="16" fill="#94a3b8" rx="2" transform="rotate(-15 59 76)" />
+        </g>
+        <rect x="18" y="100" width="64" height="22" rx="4" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+        <line x1="26" y1="102" x2="26" y2="120" stroke="#475569" stroke-width="2" />
+        <line x1="36" y1="102" x2="36" y2="120" stroke="#475569" stroke-width="2" />
+        <line x1="46" y1="102" x2="46" y2="120" stroke="#475569" stroke-width="2" />
+        <line x1="56" y1="102" x2="56" y2="120" stroke="#475569" stroke-width="2" />
+        <line x1="66" y1="102" x2="66" y2="120" stroke="#475569" stroke-width="2" />
+        <line x1="74" y1="102" x2="74" y2="120" stroke="#475569" stroke-width="2" />
+      </svg>
+    `;
+
+    const RENDEZVOUS_LOVE_SVG = `
+      <svg viewBox="0 0 160 140" class="w-full h-full drop-shadow-2xl love-docked">
+        <g>
+          <path d="M 80 32 C 80 18, 96 14, 102 24 C 108 14, 124 18, 124 32 C 124 46, 102 58, 102 58 C 102 58, 80 46, 80 32 Z" 
+                fill="#e11d48" stroke="#881337" stroke-width="2" />
+          <line x1="86" y1="26" x2="118" y2="26" stroke="#fb7185" stroke-width="1.8" />
+          <line x1="84" y1="32" x2="120" y2="32" stroke="#fb7185" stroke-width="1.8" />
+          <line x1="88" y1="38" x2="116" y2="38" stroke="#fb7185" stroke-width="1.8" />
+          <line x1="93" y1="44" x2="111" y2="44" stroke="#fb7185" stroke-width="1.8" />
+        </g>
+        <g>
+          <ellipse cx="38" cy="46" rx="28" ry="24" fill="#ffffff" stroke="#0f172a" stroke-width="3" />
+          <ellipse cx="40" cy="48" rx="21" ry="15" fill="#0f172a" />
+          <path d="M 26 48 Q 33 42 39 49" fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" />
+          <path d="M 43 49 Q 49 42 55 48" fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" />
+          <path d="M 20 74 C 16 98, 28 126, 44 130 C 58 124, 68 98, 64 74 Z" fill="#ffffff" stroke="#0f172a" stroke-width="3" />
+          <ellipse cx="14" cy="88" rx="7" ry="20" fill="#ffffff" stroke="#0f172a" stroke-width="3" transform="rotate(22 14 88)" />
+          <path d="M 60 76 Q 74 86 86 94" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round" />
+          <path d="M 60 76 Q 74 86 86 94" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+        </g>
+        <g>
+          <g stroke="#0f172a" stroke-width="3">
+            <ellipse cx="106" cy="58" rx="14" ry="18" fill="#cbd5e1" transform="rotate(-6 106 58)" />
+            <ellipse cx="132" cy="58" rx="14" ry="18" fill="#cbd5e1" transform="rotate(6 132 58)" />
+            <ellipse cx="107" cy="58" rx="9" ry="12" fill="#0f172a" />
+            <ellipse cx="131" cy="58" rx="9" ry="12" fill="#0f172a" />
+            <circle cx="104" cy="52" r="3.5" fill="#ffffff" />
+            <circle cx="128" cy="52" r="3.5" fill="#ffffff" />
+            <path d="M 118 74 L 118 84" stroke="#0f172a" stroke-width="4" />
+          </g>
+          <rect x="100" y="84" width="40" height="34" rx="3" fill="#eab308" stroke="#0f172a" stroke-width="3" />
+          <rect x="100" y="84" width="22" height="10" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+          <rect x="122" y="86" width="16" height="18" fill="#ea580c" stroke="#0f172a" stroke-width="2" />
+          <text x="117" y="112" font-family="'JetBrains Mono', monospace" font-size="4.5" font-weight="bold" fill="#0f172a" text-anchor="middle">WALL·E</text>
+          <g stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 100 96 L 90 90" stroke="#eab308" stroke-width="6" />
+            <rect x="78" y="86" width="13" height="9" rx="2" fill="#64748b" transform="rotate(-25 84 90)" />
+            <path d="M 83 83 L 78 94" fill="none" stroke="#0f172a" stroke-width="2" />
+          </g>
+          <path d="M 94 122 C 94 114, 102 114, 114 114 L 140 114 C 148 114, 148 126, 144 128 L 102 128 C 96 128, 94 126, 94 122 Z" 
+                fill="#334155" stroke="#0f172a" stroke-width="3" />
+          <circle cx="102" cy="122" r="4" fill="#64748b" stroke="#0f172a" stroke-width="2" />
+          <circle cx="118" cy="122" r="4" fill="#64748b" stroke="#0f172a" stroke-width="2" />
+          <circle cx="134" cy="122" r="4" fill="#64748b" stroke="#0f172a" stroke-width="2" />
+        </g>
+      </svg>
+    `;
+
+    const SIGNAL_ECHO_ICON = `
+      <div class="relative w-full h-full flex items-center justify-center faint-signal">
+        <span class="absolute w-4 h-4 rounded-full bg-cyan-400/20 border border-cyan-400/40 animate-ping"></span>
+        <i class="ph-bold ph-radio text-cyan-400 text-xs drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]"></i>
+      </div>
+    `;
+
+    let serverState = null;
+    let isRunning = false;
+    let timer = null;
+    let stepSpeed = 300;
+    let sonarCell = null;
+    let sonarEchoes = new Set();
+
+    async function loadBackendPreset(name) {
+      pause();
+      const r = await fetch(`/api/load-preset?preset=${name}`, { method: "POST" });
+      updateState(await r.json());
+    }
+
+    async function initConfig(cfg) {
+      pause();
+      const r = await fetch("/api/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cfg)
+      });
+      updateState(await r.json());
+    }
+
+    function updateState(data) {
+      serverState = data;
+      serverState.eve_visible = Boolean(data.eve_visible);
+      serverState.eve_pos = data.eve_pos || [8, 9];
+      sonarEchoes.clear();
+      document.getElementById('impossibleAlert').classList.add('hidden');
+      document.getElementById('reportModal').classList.add('hidden');
+      document.getElementById('traceLog').innerHTML = '';
+      document.getElementById('stepCounter').innerText = '0';
+      document.getElementById('gridDimensionsTag').innerText = `${data.grid_size[0]}x${data.grid_size[1]}`;
+      paintTargetLockUI(false);
+      paintTelemetry(data.battery, data.battery);
+      paintGrid();
+      fetchConfigDrawer();
+    }
+
+    async function requestStep() {
+      if (!serverState || serverState.done) return;
+      const r = await fetch("/api/step", { method: "POST" });
+      const res = await r.json();
+
+      serverState.battery = res.battery;
+      serverState.agent_pos = res.agent_pos;
+      serverState.done = res.done;
+      serverState.clues = res.clues;
+      serverState.eve_visible = Boolean(res.eve_visible);
+      serverState.eve_pos = res.eve_pos || res.triangulated_pos || serverState.eve_pos;
+
+      if (res.target_locked || res.eve_visible) {
+        paintTargetLockUI(true, res.target_confidence, serverState.eve_pos);
+      }
+
+      if (res.action === "SCAN") {
+        sonarCell = [...res.agent_pos];
+        if (res.observation?.ambient_reading) sonarEchoes.add(`${res.agent_pos[0]},${res.agent_pos[1]}`);
+      }
+
+      if (res.impossible) {
+        pause();
+        document.getElementById('impossibleDetail').innerText = res.abort_reason;
+        document.getElementById('impossibleAlert').classList.remove('hidden');
+      }
+
+      paintLog(res.trace_entry);
+      paintTelemetry(res.battery, res.battery_max || 100, res.trace_entry.step);
+      paintGrid();
+
+      if (res.success) {
+        pause();
+        setTimeout(() => {
+          if (res.report_markdown) {
+            document.getElementById('reportModalBody').innerText = res.report_markdown;
+            document.getElementById('reportModal').classList.remove('hidden');
+          }
+        }, 500);
+      } else if (res.done) {
+        pause();
+      }
+    }
+
+    function paintTargetLockUI(isLocked, confidence = 0, pos = null) {
+      const ind = document.getElementById('targetLockIndicator');
+      const txt = document.getElementById('targetLockText');
+      if (isLocked) {
+        ind.className = "flex items-center gap-2 text-cyan-400 font-mono text-[11px] font-bold";
+        txt.innerText = `Bayesian Lock: [${pos ? pos.join(',') : '?'}] (${confidence}%)`;
+      } else {
+        ind.className = "flex items-center gap-2 text-slate-500 font-mono text-[11px]";
+        txt.innerText = "Target Unconfirmed";
+      }
+    }
+
+    function paintGrid() {
+      if (!serverState) return;
+      const container = document.getElementById('gridContainer');
+      const [w, h] = serverState.grid_size;
+      container.style.gridTemplateColumns = `repeat(${h}, minmax(0, 1fr))`;
+      container.innerHTML = '';
+
+      const obstacles = new Set(serverState.obstacles.map(p => `${p[0]},${p[1]}`));
+      const solars = new Set(serverState.solar_stations.map(p => `${p[0]},${p[1]}`));
+      const clues = new Map((serverState.clues || []).map(c => [`${c.pos[0]},${c.pos[1]}`, c]));
+
+      const targetEve = serverState.eve_pos || [8, 9];
+      const isRendezvous = (serverState.agent_pos[0] === targetEve[0] &&
+                            serverState.agent_pos[1] === targetEve[1]);
+
+      for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+          const key = `${x},${y}`;
+          const isAgent = (serverState.agent_pos[0] === x && serverState.agent_pos[1] === y);
+          const isEve = (targetEve[0] === x && targetEve[1] === y);
+
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell rounded border border-slate-800/80 flex items-center justify-center relative overflow-hidden';
+          if (obstacles.has(key)) cell.className += ' bg-slate-800/90 border-slate-700/60';
+          else cell.className += ' bg-slate-900/40';
+
+          if (sonarCell && sonarCell[0] === x && sonarCell[1] === y) cell.classList.add('sonar-active');
+
+          if (isEve && isAgent && isRendezvous) {
+            cell.innerHTML = `<div class="relative z-20 w-full h-full p-0 flex items-center justify-center">${RENDEZVOUS_LOVE_SVG}</div>`;
+          } else if (isAgent) {
+            cell.innerHTML = `<div class="relative z-10 w-full h-full p-1 flex items-center justify-center animate-bounce">${WALLE_SVG}</div>`;
+          } else if (isEve && serverState.eve_visible) {
+            cell.innerHTML = `
+              <div class="relative z-10 w-full h-full p-0.5 flex items-center justify-center">
+                <img src="/eve-image" alt="EVE" class="w-full h-full object-contain drop-shadow-xl animate-fade-in" />
+              </div>
+            `;
+          } else if (solars.has(key)) {
+            cell.innerHTML = `<i class="ph-fill ph-sun text-emerald-400 text-lg opacity-90 drop-shadow"></i>`;
+          } else if (clues.has(key)) {
+            cell.innerHTML = `<i class="ph-bold ph-magnifying-glass text-amber-300 text-sm animate-pulse"></i>`;
+          } else if (obstacles.has(key)) {
+            cell.innerHTML = `<i class="ph-bold ph-prohibit text-slate-600 text-xs"></i>`;
+          } else if (sonarEchoes.has(key)) {
+            cell.innerHTML = SIGNAL_ECHO_ICON;
+          }
+
+          container.appendChild(cell);
+        }
+      }
+      sonarCell = null;
+    }
+
+    function paintTelemetry(battery, maxBat, step = 0) {
+      document.getElementById('stepCounter').innerText = step;
+      document.getElementById('batteryCounter').innerText = `${battery}/${maxBat}`;
+      const pct = Math.max(0, Math.min(100, (battery / maxBat) * 100));
+      document.getElementById('batteryProgressBar').style.width = `${pct}%`;
+    }
+
+    function paintLog(entry) {
+      const box = document.getElementById('traceLog');
+      const item = document.createElement('div');
+      item.className = "trace-item p-2 rounded bg-slate-950/80 border border-slate-800 text-[11px] leading-tight flex flex-col justify-between shadow-inner";
+
+      let actionBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold `;
+      if (entry.action === "MOVE") actionBadge += `bg-sky-500/20 text-sky-400 border border-sky-500/30">MOVE</span>`;
+      else if (entry.action === "SCAN") actionBadge += `bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">SCAN</span>`;
+      else if (entry.action === "RECHARGE") actionBadge += `bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">CHARGE</span>`;
+      else if (entry.action === "HALT") actionBadge += `bg-rose-500/20 text-rose-400 border border-rose-500/30">HALT</span>`;
+      else actionBadge += `bg-slate-700 text-slate-300">INIT</span>`;
+
+      item.innerHTML = `
+        <div class="flex items-center justify-between text-slate-400 pb-1 mb-1 border-b border-slate-900">
+          <div class="flex items-center gap-1.5">
+            <span class="text-amber-400 font-bold">#${entry.step}</span>
+            <span>pos: [${entry.position.join(',')}]</span>
+            ${actionBadge}
+          </div>
+          <span>bat: <b class="${entry.battery < 25 ? 'text-rose-400' : 'text-emerald-400'}">${entry.battery}</b></span>
+        </div>
+        <p class="text-slate-300 text-[10px] truncate">${entry.reasoning}</p>
+      `;
+
+      box.appendChild(item);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function togglePlay() {
+      if (isRunning) pause();
+      else {
+        isRunning = true;
+        document.getElementById('playText').innerText = "PAUSE";
+        timer = setInterval(requestStep, stepSpeed);
+      }
+    }
+
+    function pause() {
+      isRunning = false;
+      clearInterval(timer);
+      document.getElementById('playText').innerText = "RUN";
+    }
+
+    function resetSimulation() {
+      fetch("/api/config").then(r => r.json()).then(cfg => initConfig(cfg));
+    }
+
+    function changeSpeed(val) {
+      stepSpeed = parseInt(val, 10);
+      if (isRunning) { clearInterval(timer); timer = setInterval(requestStep, stepSpeed); }
+    }
+
+    function handleFileUpload(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => initConfig(JSON.parse(e.target.result));
+      reader.readAsText(file);
+    }
+
+    function toggleJsonEditor() {
+      document.getElementById('jsonEditorDrawer').classList.toggle('translate-x-full');
+    }
+
+    async function fetchConfigDrawer() {
+      const r = await fetch("/api/config");
+      document.getElementById('jsonEditorArea').value = JSON.stringify(await r.json(), null, 2);
+    }
+
+    function applyEditorJson() {
+      toggleJsonEditor();
+      initConfig(JSON.parse(document.getElementById('jsonEditorArea').value));
+    }
+
+    async function openReportModal() {
+      const r = await fetch("/api/report");
+      const d = await r.json();
+      document.getElementById('reportModalBody').innerText = d.report_markdown;
+      document.getElementById('reportModal').classList.remove('hidden');
+    }
+
+    function copyReportText() {
+      navigator.clipboard.writeText(document.getElementById('reportModalBody').innerText);
+    }
+
+    window.onload = () => loadBackendPreset('default');
+  </script>
+</body>
+</html>

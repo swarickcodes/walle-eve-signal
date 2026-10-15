@@ -1,0 +1,28 @@
+{
+  "grid_size": [15, 15],
+  "start_pos": [0, 0],
+  "battery_capacity": 120,
+  "costs": {
+    "move": 2,
+    "scan": 4,
+    "recharge_rate": 30
+  },
+  "solar_stations": [[0, 0], [7, 7], [14, 14]],
+  "obstacles": [
+    [3, 3], [3, 4], [3, 5],
+    [8, 8], [8, 9], [9, 8],
+    [10, 2], [11, 2], [12, 2]
+  ],
+  "initial_signal": {
+    "direction": "SE",
+    "strength": 0.5
+  },
+  "ground_truth": {
+    "eve_pos": [12, 13],
+    "clues": [
+      {"pos": [2, 2], "type": "plant_boot_trace", "dist_to_eve": 14.86, "noise_sigma": 0.9},
+      {"pos": [7, 6], "type": "ion_burn_trail", "dist_to_eve": 8.60, "noise_sigma": 0.5},
+      {"pos": [11, 12], "type": "direct_beacon", "dist_to_eve": 1.41, "noise_sigma": 0.1}
+    ]
+  }
+}

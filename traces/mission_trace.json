@@ -1,0 +1,289 @@
+[
+  {
+    "step": 1,
+    "position": [
+      1,
+      0
+    ],
+    "battery": 98,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (1, 2)"
+  },
+  {
+    "step": 2,
+    "position": [
+      1,
+      1
+    ],
+    "battery": 96,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (1, 2)"
+  },
+  {
+    "step": 3,
+    "position": [
+      1,
+      2
+    ],
+    "battery": 94,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (1, 2)"
+  },
+  {
+    "step": 4,
+    "position": [
+      1,
+      2
+    ],
+    "battery": 89,
+    "action": "SCAN",
+    "observation": {
+      "clue_found": true,
+      "clue_data": {
+        "type": "radio_ping",
+        "dist_estimate": 9.89,
+        "sigma": 0.8,
+        "origin": [
+          1,
+          2
+        ]
+      }
+    },
+    "reasoning": "Unscanned clue detected at current tile"
+  },
+  {
+    "step": 5,
+    "position": [
+      1,
+      3
+    ],
+    "battery": 87,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (4, 5)"
+  },
+  {
+    "step": 6,
+    "position": [
+      1,
+      4
+    ],
+    "battery": 85,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (4, 5)"
+  },
+  {
+    "step": 7,
+    "position": [
+      1,
+      5
+    ],
+    "battery": 83,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (4, 5)"
+  },
+  {
+    "step": 8,
+    "position": [
+      2,
+      5
+    ],
+    "battery": 81,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (4, 5)"
+  },
+  {
+    "step": 9,
+    "position": [
+      3,
+      5
+    ],
+    "battery": 79,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (4, 5)"
+  },
+  {
+    "step": 10,
+    "position": [
+      4,
+      5
+    ],
+    "battery": 77,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (4, 5)"
+  },
+  {
+    "step": 11,
+    "position": [
+      4,
+      5
+    ],
+    "battery": 72,
+    "action": "SCAN",
+    "observation": {
+      "clue_found": true,
+      "clue_data": {
+        "type": "energy_residue",
+        "dist_estimate": 5.65,
+        "sigma": 0.5,
+        "origin": [
+          4,
+          5
+        ]
+      }
+    },
+    "reasoning": "Unscanned clue detected at current tile"
+  },
+  {
+    "step": 12,
+    "position": [
+      5,
+      5
+    ],
+    "battery": 70,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (7, 8)"
+  },
+  {
+    "step": 13,
+    "position": [
+      5,
+      6
+    ],
+    "battery": 68,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (7, 8)"
+  },
+  {
+    "step": 14,
+    "position": [
+      5,
+      7
+    ],
+    "battery": 66,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (7, 8)"
+  },
+  {
+    "step": 15,
+    "position": [
+      5,
+      8
+    ],
+    "battery": 64,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (7, 8)"
+  },
+  {
+    "step": 16,
+    "position": [
+      6,
+      8
+    ],
+    "battery": 62,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (7, 8)"
+  },
+  {
+    "step": 17,
+    "position": [
+      7,
+      8
+    ],
+    "battery": 60,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "Navigating to clue position at (7, 8)"
+  },
+  {
+    "step": 18,
+    "position": [
+      7,
+      8
+    ],
+    "battery": 55,
+    "action": "SCAN",
+    "observation": {
+      "clue_found": true,
+      "clue_data": {
+        "type": "direct_beacon",
+        "dist_estimate": 1.41,
+        "sigma": 0.2,
+        "origin": [
+          7,
+          8
+        ]
+      }
+    },
+    "reasoning": "Unscanned clue detected at current tile"
+  },
+  {
+    "step": 19,
+    "position": [
+      8,
+      8
+    ],
+    "battery": 53,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "High target confidence (0.89); advancing to target"
+  },
+  {
+    "step": 20,
+    "position": [
+      8,
+      9
+    ],
+    "battery": 51,
+    "action": "MOVE",
+    "observation": {
+      "status": "MOVED_OK"
+    },
+    "reasoning": "High target confidence (0.89); advancing to target"
+  }
+]
